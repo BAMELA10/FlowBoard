@@ -1,0 +1,23 @@
+services:
+  postgres:
+    ports: !reset []
+    
+  server:
+    build:
+      context: ./server
+      target: prod
+    ports: !reset []
+    #command: sh -c "pnpm prisma migrate deploy && node dist/src/main.js"
+    command: sh -c "pnpm prisma migrate deploy && node dist/src/main.js"
+    volumes: !reset []
+
+  client:
+    build:
+      context: ./client
+      target: prod
+    ports:
+      - 80:80
+    restart: unless-stopped
+    volumes: !reset []
+    depends_on:
+      - server
