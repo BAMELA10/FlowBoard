@@ -12,7 +12,7 @@ FROM base AS deps
 RUN corepack enable
 
 #copier le package.json et pnpm.lock.json
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
 #installer openssl pour prisma
 RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
@@ -33,7 +33,7 @@ COPY . .
 EXPOSE 3000
 
 #lancer l"application
-CMD ["pnpm", "run", "start:dev"]
+CMD ["pnpm", "run", "dev"]
 
 #-------------------------------------------------------------
 FROM deps AS prod
