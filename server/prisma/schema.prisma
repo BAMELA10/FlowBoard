@@ -1,0 +1,131 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id String @id @default(uuid()) 
+  email String @unique()
+  name String
+  secret Secret?
+  board Board[]
+  sender Invitation[] @relation("sender")
+  receiver Invitation[] @relation("receiver")
+  member Members[]
+  comment Comment[]
+  card Card[]
+  logs ActivityLog[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+}
+
+model Secret {
+  id String @id @default(uuid()) 
+  password_hash String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+  userId String @unique()
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token String?
+  lastSignIn DateTime?
+}
+
+enum InvitationState {
+  pending
+  accepted
+  refused
+}
+
+model Invitation {
+  id String @id @default(uuid())
+  boardId String
+  board Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  senderId String
+  sender User @relation("sender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiverId String
+  receiver User @relation("receiver",fields: [receiverId], references: [id], onDelete: Cascade)
+  state InvitationState @default(pending)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+}
+
+model Members {
+  id String @id @default(uuid())
+  boardId String
+  board Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  memberId String
+  member User @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+}
+
+model Board {
+  id String @id @default(uuid())
+  name String
+  ownerId String
+  owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  invitation Invitation[]
+  member Members[]
+  column Column[]
+  logs ActivityLog[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+}
+
+model Column {
+  id String @id @default(uuid())
+  boardId String
+  board Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  name String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+  card Card[]
+}
+
+model Card {
+  id String @id @default(uuid())
+  columnId String
+  column Column @relation(fields: [columnId], references: [id], onDelete: Cascade)
+  title String
+  description String?
+  labelColor String
+  assigneeId String?
+  assignee User? @relation(fields: [assigneeId], references: [id], onDelete: Cascade)
+  dueDate DateTime?
+  comment Comment[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+}
+
+model Comment {
+  id String @id @default(uuid())
+  cardId String
+  card Card @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  authorId String?
+  author User? @relation(fields: [authorId], references: [id], onDelete: Cascade) 
+  text String
+  createdAt DateTime @default(now())
+}
+
+model ActivityLog {
+  id String @id @default(uuid())
+  boardId String?
+  board Board? @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  authorId String
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  action String
+  createdAt DateTime @default(now())
+}
+
+
