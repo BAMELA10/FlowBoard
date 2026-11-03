@@ -20,16 +20,6 @@ export function errorHandler(
     return;
   }
 
-  // 2. Erreur de parsing JSON d'Express (body malformé)
-//   if (err instanceof SyntaxError && "body" in err) {
-//     res.status(400).json({
-//       error: {
-//         code: "INVALID_JSON",
-//         message: "Malformed JSON body",
-//       },
-//     });
-//     return;
-//   }
 
   // 3. Erreur inattendue : on loggue côté serveur, on ne fuit rien au client
   console.error("[UNHANDLED ERROR]", err);

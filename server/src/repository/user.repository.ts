@@ -1,5 +1,7 @@
 import { prisma } from '../db/connectDb';
 import type { PayloadRegister, UserWithSecret } from '../dto';
+import { ConflictError, InternalServerError } from '../errors/http-errors';
+import { PrismaClientKnownRequestError } from '../generated/prisma/internal/prismaNamespace';
 
 export class UserRepository {
   constructor(private readonly database: typeof prisma = prisma) {}
@@ -22,18 +24,32 @@ export class UserRepository {
     await this.database.user.update({ where: { id }, data: { secret: { update: { lastSignIn: new Date(Date.now())}}}})
   }
 
+  public async setResfreshToken(id:string, token:string| null ) {
+    await this.database.user.update({ where: { id }, data: { secret: { update: { token }}}})
+  }
+
   public async create(payload: PayloadRegister): Promise<UserWithSecret> {
-    return await this.database.user.create({
-      data: {
-        email: payload.email,
-        name: payload.name,
-        secret: {
-          create: {
-            password_hash: payload.password,
+    try { 
+      const user = await this.database.user.create({
+        data: {
+          email: payload.email,
+          name: payload.name,
+          secret: {
+            create: {
+              password_hash: payload.password,
+            },
           },
         },
-      },
-      include:{ secret: true }
-    });
+        include:{ secret: true }
+      });
+      return user;
+    } catch (e) {
+      if (e instanceof PrismaClientKnownRequestError &&
+        e.code === 'P2002') throw new ConflictError(
+          "UserWithEmailAlreadyExists"
+        );
+      else throw new InternalServerError("Something went wrong!");
+    }
+    
   }
 }

@@ -20,7 +20,12 @@ RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 RUN pnpm config set store-dir /pnpm/store
 
 #install les dependances sans oublié d"ajouter le store par garder les modules
-RUN  --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile --prefer-offline
+#RUN  --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile --prefer-offline
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+  pnpm config set network-concurrency 1 && \
+  pnpm config set fetch-retries 10 && \
+  pnpm config set fetch-timeout 600000 && \
+  pnpm install --frozen-lockfile --prefer-offline
 
 FROM deps AS dev
 
